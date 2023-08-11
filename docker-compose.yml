@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  app:
+    container_name: app
+    build: ./app
+    volumes:
+      - ./app:/app
+    ports:
+      - 3000:3000
+
+  api:
+    container_name: api
+    build: ./api
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 89 -b '0.0.0.0'"
+    volumes:
+      - ./api:/app
+    ports:
+      - 89:89
+    # allows pry to halt execution when in a docker container: https://gist.github.com/briankung/ebfb567d149209d2d308576a6a34e5d8
+    tty: true
+    stdin_open: true
+    depends_on:
+      - postgres
+      - worker
+
+  worker:
+    container_name: worker
+    build: ./api
+    command: bundle exec sidekiq
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    volumes:
+      - ./api:/app
+
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    env_file:
+      - ./api/.env
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  redis:
+    container_name: redis
+    image: "redis:7-alpine"
+    ports:
+      - 6379
+    volumes:
+    - redis:/var/lib/redis/data
+
+volumes:
+  postgres:
+  redis:
