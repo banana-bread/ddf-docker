@@ -104,3 +104,39 @@ If we wanted to delete our load balancer
 ```
 aws elb delete-load-balancer --load-balancer-name ddf-api
 ```
+
+### Profiling our rails app
+
+First thing we do is set our rails app to run in production mode
+```
+RAILS_ENV=production
+```
+
+In development mode, things are done less efficiently in terms of runtime performance, but they drastically increase the development experience by offering tools such as live code reloading.  Here, we want to temporariliy set the rails environment to production so that its performance and resource usage will be closer to what it will be like when we really run it in production.
+
+Now we need to create a `ddf_production` table since our rails env is now production and will be expecting it.
+```
+docker exec -it api bash
+rails db:reset
+```
+
+Now with everything running, we're going to check the memory and CPU resources on our application.  To do that, we can use the `docker stats` command.  We can even get the usage for multiple containers at once.  We'll be looking at the stats for both the api and the worker.
+```
+docker stats api worker
+```
+
+We're going to do some real benchmarking on the api, by using a tool called wrk. wrk is a highly efficient http benchmarking tool.  Somebody has already created a docker image for the tool, so we can just pull that in.
+```
+docker pull williamyeh/wrk
+```
+
+Lets pull the IP of our api container
+```
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' api     
+```
+
+Now, we're going to start wrk with 10 threads, 50 connections that are going to be kept open, and the duration is going to be 10 seconds.  We're then going to pass in the ip address of our api container.
+```
+docker run --rm williamyeh/wrk -t10 -c50 -d10s http://172.18.0.6:89
+```
+

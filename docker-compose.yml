@@ -17,6 +17,8 @@ services:
       - ./api:/app
     ports:
       - 89:89
+    env_file:
+      - ./api/.env
     # allows pry to halt execution when in a docker container: https://gist.github.com/briankung/ebfb567d149209d2d308576a6a34e5d8
     tty: true
     stdin_open: true
@@ -28,8 +30,8 @@ services:
     container_name: worker
     build: ./api
     command: bundle exec sidekiq
-    environment:
-      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - ./api/.env
     depends_on:
       - redis
     volumes:
