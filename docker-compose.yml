@@ -56,14 +56,14 @@ services:
       - redis:/var/lib/redis/data
 
   # Uncomment to load test api.  More info on locust: https://docs.locust.io/en/stable/index.html
-  #
+  
   # locust:
   #   container_name: load_test
   #   image: locustio/locust
   #   ports:
   #     - 8089:8089
   #   volumes: 
-  #     - ./:/mnt/locust
+  #     - ./locustfile.py:/mnt/locust
   #   command: -f /mnt/locust/locustfile.py --host=http://api:89
   #   depends_on:
   #     - api
